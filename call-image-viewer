@@ -1,5 +1,9 @@
 #!/bin/sh
 
+prefix=''
+
+which oa 2>&1 > /dev/null && prefix='oa'
+
 if [ $# = 1 ]
 then
   fn="$1"
@@ -9,7 +13,7 @@ then
 
   num=`ls "$dir"/*.* | grep -n -F "$fp" | cut -d : -f 1`
 
-  one sxiv -s -n "$num" "$dir"/*.*
+  $prefix sxiv -s -n "$num" "$dir"/*.*
 else
-  one sxiv -s "$@"
+  $prefix sxiv -s "$@"
 fi
