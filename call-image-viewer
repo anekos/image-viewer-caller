@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ $# = 1 ]
+then
+  fn="$1"
+
+  dir=`dirname "$fn"`
+  fp="$dir/`basename $fn`"
+
+  num=`ls "$dir"/*.* | grep -n -F "$fp" | cut -d : -f 1`
+
+  one sxiv -s -n "$num" "$dir"/*.*
+else
+  one sxiv -s "$@"
+fi
