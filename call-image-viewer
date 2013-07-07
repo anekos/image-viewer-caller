@@ -1,19 +1,95 @@
-#!/bin/sh
+#!/usr/bin/ruby
+# vim: set fileencoding=utf-8 :
 
-prefix=''
+require 'pathname'
+require 'shellwords'
 
-which oa 2>&1 > /dev/null && prefix='oa'
+module Viewer
+  def self.has_command (command)
+    system("which #{command.shellescape} > /dev/null 2>&1")
+  end
 
-if [ $# = 1 ]
-then
-  fn="$1"
+  class ViewerBase
+    attr_reader :prefixes
 
-  dir=`dirname "$fn"`
-  fp="$dir/`basename $fn`"
+    def initialize (*paths)
+      @paths = paths.map {|it| Pathname.new(it) }
+      @prefixes = []
+    end
 
-  num=`ls "$dir"/*.* | grep -n -F "$fp" | cut -d : -f 1`
+    def directory
+      @paths.first.dirname
+    end
 
-  $prefix sxiv -s -n "$num" "$dir"/*.*
-else
-  $prefix sxiv -s "$@"
-fi
+    def sorted_file_list
+      if @paths.size == 1
+        ls = directory.entries.select {|it| it.file? } .sort
+        i = ls.index(base_filename)
+        ls = ls.map {|it| it.to_s.shellescape }
+        ls[i .. -1] + ls[0 ... i]
+      else
+        @paths
+      end
+    end
+
+    def base_filename
+      @paths.first.basename
+    end
+
+    def call
+      system(prefix + command + ' ' + sorted_file_list.join(' '))
+    end
+
+    def prefix
+      if @prefixes.empty?
+        ''
+      else
+        @prefixes.join(' ') + ' '
+      end
+    end
+  end
+
+  class XViewerBase < ViewerBase
+    def x?
+      true
+    end
+  end
+
+  class ConsoleViewerBase < ViewerBase
+    def x?
+      false
+    end
+  end
+
+  class Fbv < ConsoleViewerBase
+    def command
+      'fbv -f'
+    end
+  end
+
+  class Sxiv < XViewerBase
+    def command
+      'sxiv -s'
+    end
+  end
+
+  def self.new (*paths)
+    klass =
+      case ENV['TERM']
+      when 'linux'
+        Fbv
+      else
+        Sxiv
+      end
+    instance = klass.new(*paths)
+    if instance.x?
+      %W[oa one].each do
+        |cmd|
+        instance.prefixes << cmd if has_command(cmd)
+      end
+    end
+    instance
+  end
+end
+
+Viewer.new(*ARGV).call
