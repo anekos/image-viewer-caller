@@ -23,17 +23,13 @@ module Viewer
 
     def sorted_file_list
       if @paths.size == 1
-        ls = directory.entries.select {|it| it.file? } .sort
-        i = ls.index(base_filename)
+        ls = directory.entries.map {|it| directory + it } .reject {|it| it.directory? && /\./ === it.extname } .sort
+        i = ls.index(@paths.first)
         ls = ls.map {|it| it.to_s.shellescape }
-        ls[i .. -1] + ls[0 ... i]
+        (ls[i .. -1] rescue []) + (ls[0 ... i] rescue [])
       else
         @paths
       end
-    end
-
-    def base_filename
-      @paths.first.basename
     end
 
     def call
