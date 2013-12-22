@@ -65,7 +65,7 @@ module Viewer
 
   class Sxiv < XViewerBase
     def command
-      'sxiv -s'
+      'sxiv -b -s'
     end
   end
 
