@@ -65,7 +65,9 @@ module Viewer
 
   class Sxiv < XViewerBase
     def command
-      'sxiv -b -s'
+      # -b          Do not show info bar on bottom of window.
+      # -s [MODE]   f = fit mode
+      'sxiv -b -s f'
     end
   end
 
